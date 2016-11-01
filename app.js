@@ -27,12 +27,22 @@ app.get('/', function (req, res){
   res.send("Hello");
 });
 
-app.get('/test', function(req, res){
-  for(i in collectionList){
-    if(i<5) continue;
+app.get('/load_rank_table', function(req, res){
+  var query = "CALL show_dz_rank( '2016-10-01' , '2016-10-07')";
+  pool.query(query, function(err, rows, fields){
+    if(err) throw err;
     res.type('text/plain');
-    res.send(i);
-  }
+    res.send(JSON.stringify(rows));
+  });
+});
+
+app.get('/load_rank_table/:start_date/:end_date', function(req, res){
+  var query = "CALL show_dz_rank(" + req.params.start_date + "," + req.params.end_date + ")";
+  pool.query(query, function(err, rows, fields){
+    if(err) throw err;
+    res.type('text/plain');
+    res.send(JSON.stringify(rows));
+  });
 });
 
 app.use(function (req, res){
