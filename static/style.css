@@ -1,0 +1,24 @@
+
+.demo-list-two {
+  width: 300px;
+}
+
+.icon{
+  text-align: center;
+}
+
+.icon_up{
+  color: #FF5577;
+}
+
+.icon_flat{
+  color: #112211;
+}
+
+.icon_down{
+  color: #5566F;
+}
+
+i.small-icon{
+  width:50px;
+}

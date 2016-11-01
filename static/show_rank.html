@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>질병 순위표</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="/static/style.css" type="text/css" />
+    <link rel="stylesheet" href="mdl/material.min.css" type="text/css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script type="text/javascript" src="/static/script.js"></script>
+    <script src="mdl/material.min.js"></script>
+</head>
+<body>
+<table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
+  <thead>
+    <tr>
+      <th class="mdl-data-table__cell--non-numeric">Disease</th>
+      <th>Percent</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="mdl-data-table__cell--non-numeric">열감기</td>
+      <td><span class="mdl-list__item-sub-title">27.48%</span></td>
+      <td class="icon_down icon"><i class="material-icons small-icon">ic_trending_down</i></td>
+    </tr>
+    <tr>
+      <td class="mdl-data-table__cell--non-numeric">인두염/편도염</td>
+      <td>24.10%</td>
+      <td class="icon_flat icon"><i class="material-icons small-icon">ic_trending_flat</i></td>
+    </tr>
+    <tr>
+      <td class="mdl-data-table__cell--non-numeric">중이염</td>
+      <td>5.50%</td>
+      <td class="icon_up icon"><i class="material-icons small-icon">ic_trending_up</i></td>
+    </tr>
+  </tbody>
+</table>
+<ul class="demo-list-two mdl-list">
+  <li class="mdl-list__item mdl-list__item--two-line">
+    <span class="mdl-list__item-primary-content">
+      <span>열감기</span>
+      <span class="mdl-list__item-sub-title">27.48%</span>
+    </span>
+    <span class="mdl-list__item-secondary-content">
+      <a class="mdl-list__item-secondary-action" href="#"><i class="material-icons">ic_trending_down</i></a>
+    </span>
+  </li>
+  <li class="mdl-list__item mdl-list__item--two-line">
+    <span class="mdl-list__item-primary-content">
+      <span>인두염/편도염</span>
+      <span class="mdl-list__item-sub-title">24.10%</span>
+    </span>
+    <span class="mdl-list__item-secondary-content">
+      <a class="mdl-list__item-secondary-action" href="#"><i class="material-icons">ic_trending_flat</i></a>
+    </span>
+  </li>
+  <li class="mdl-list__item mdl-list__item--two-line">
+    <span class="mdl-list__item-primary-content">
+      <span>중이염</span>
+      <span class="mdl-list__item-sub-title">5.50%</span>
+    </span>
+    <span class="mdl-list__item-secondary-content">
+      <a class="mdl-list__item-secondary-action" href="#"><i class="material-icons">ic_trending_up</i></a>
+    </span>
+  </li>
+</ul>
+</body>
+</html>
