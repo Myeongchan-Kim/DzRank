@@ -27,22 +27,35 @@ app.get('/', function (req, res){
   res.send("Hello");
 });
 
-app.get('/load_rank_table', function(req, res){
-  var query = "CALL show_dz_rank( '2016-10-01' , '2016-10-07')";
+var load_rank_table = function(req, res, start_date, end_date){
+  var query = "CALL show_dz_rank('" + start_date + "', '" + end_date + "')";
+  console.log(query);
   pool.query(query, function(err, rows, fields){
     if(err) throw err;
     res.type('text/plain');
     res.send(JSON.stringify(rows));
   });
+}
+
+app.get('/load_rank_table', function(req, res){
+  var date = new Date();
+  var weekAgoDate = new Date();
+  weekAgoDate.setDate(date.getDate() - 6);
+  var dateStr = date.getFullYear() + '-' + (date.getMonth()+1) + '-' + date.getDate();
+  var weekAgoDateStr = weekAgoDate.getFullYear() + '-' + (weekAgoDate.getMonth()+1) + '-' + weekAgoDate.getDate();
+  load_rank_table(req, res, weekAgoDateStr, dateStr);
+});
+
+app.get('/load_rank_table/:end_date', function(req, res){
+  var dateStr = req.params.end_date;
+  var weekAgoDate = new Date(dateStr);
+  weekAgoDate.setDate(weekAgoDate.getDate() - 6);
+  var weekAgoDateStr = weekAgoDate.getFullYear() + '-' + (weekAgoDate.getMonth()+1) + '-' + weekAgoDate.getDate();
+  load_rank_table(req, res, weekAgoDateStr, dateStr);
 });
 
 app.get('/load_rank_table/:start_date/:end_date', function(req, res){
-  var query = "CALL show_dz_rank(" + req.params.start_date + "," + req.params.end_date + ")";
-  pool.query(query, function(err, rows, fields){
-    if(err) throw err;
-    res.type('text/plain');
-    res.send(JSON.stringify(rows));
-  });
+  load_rank_table(req, res, req.params.start_date, req.params.end_date);
 });
 
 app.use(function (req, res){
