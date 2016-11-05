@@ -32,25 +32,49 @@ var load_rank_table = function(req, res, start_date, end_date){
   console.log(query);
   pool.query(query, function(err, rows, fields){
     if(err) throw err;
-    res.type('text/plain');
-    res.send(JSON.stringify(rows));
+    var old_query = "CALL show_dz_rank('" + date_add(start_date, -7) + "', '" + date_add(end_date, -7) + "')";
+    console.log(old_query);
+    pool.query(old_query, function( err, old_rows, fields){
+      if(err) throw err;
+      var cur_table = rows[0];
+      var old_table = old_rows[0];
+
+      for( i in cur_table){
+        var cur_dz = cur_table[i];
+        cur_dz.trend = -1; //  default = -1 if new disease come up.
+        for(j in old_table){
+          var old_dz = old_table[j];
+          if(cur_dz.dzNum == old_dz.dzNum){
+            cur_dz.trend = old_dz.ratio / cur_dz.ratio;
+            console.log(cur_dz.trend);
+            break;
+          }
+        }
+      }
+
+      res.type('text/plain');
+      res.send(JSON.stringify(cur_table));
+    } )
   });
+}
+
+var date_add = function( dateStr , addDay){
+  var originDate = new Date(dateStr);
+  var resultDate = new Date(dateStr);
+  resultDate.setDate(originDate.getDate() + Number(addDay));
+  return "" + resultDate.getFullYear() + '-' + (resultDate.getMonth()+1) + '-' + resultDate.getDate();
 }
 
 app.get('/load_rank_table', function(req, res){
   var date = new Date();
-  var weekAgoDate = new Date();
-  weekAgoDate.setDate(date.getDate() - 6);
   var dateStr = date.getFullYear() + '-' + (date.getMonth()+1) + '-' + date.getDate();
-  var weekAgoDateStr = weekAgoDate.getFullYear() + '-' + (weekAgoDate.getMonth()+1) + '-' + weekAgoDate.getDate();
+  var weekAgoDateStr = date_add(dateStr, -13);
   load_rank_table(req, res, weekAgoDateStr, dateStr);
 });
 
 app.get('/load_rank_table/:end_date', function(req, res){
   var dateStr = req.params.end_date;
-  var weekAgoDate = new Date(dateStr);
-  weekAgoDate.setDate(weekAgoDate.getDate() - 6);
-  var weekAgoDateStr = weekAgoDate.getFullYear() + '-' + (weekAgoDate.getMonth()+1) + '-' + weekAgoDate.getDate();
+  var weekAgoDateStr = date_add(dateStr, -13);
   load_rank_table(req, res, weekAgoDateStr, dateStr);
 });
 
