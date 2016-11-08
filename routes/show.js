@@ -40,7 +40,7 @@ var load_rank_table = function(req, res, start_date, end_date){
 var calc_trend = function(cur_table, old_table){
   for( i in cur_table){
     var cur_dz = cur_table[i];
-    cur_dz.trend = 99; //  default = -1 if new disease come up.
+    cur_dz.trend = -1; //  default = -1 if new disease come up.
     for(j in old_table){
       var old_dz = old_table[j];
       if(cur_dz.dzNum == old_dz.dzNum){
