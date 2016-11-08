@@ -9,7 +9,7 @@ show reginmal disease forcast in Korea
 - 현재까지 14일 동안의 전국 순위 테이블을 리스트로 반환합니다. 
 ```
 ```
-response : 
+response : 내림차순 정렬되어 있습니다.
 [
 { "dzNum": memo에서 입력한 질병 번호,
   "dzName": 질병이름,
