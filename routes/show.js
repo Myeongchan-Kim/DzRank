@@ -105,7 +105,7 @@ router.route('/regional/:region_num/:end_date').get(function(req, res){
 });
 
 router.route('/regional/:region_num/:start_date/:end_date').get( function(req, res){
-  regional_rank(req, res, req.parans.region_num, req.params.start_date, req.params.end_date);
+  regional_rank(req, res, req.params.region_num, req.params.start_date, req.params.end_date);
 });
 
 
