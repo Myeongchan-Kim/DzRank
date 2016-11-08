@@ -6,9 +6,10 @@ show reginmal disease forcast in Korea
 
 ```
 /show/total
-
 - 현재까지 14일 동안의 전국 순위 테이블을 리스트로 반환합니다. 
-
+```
+```
+response : 
 [
 { "dzNum": memo에서 입력한 질병 번호,
   "dzName": 질병이름,
