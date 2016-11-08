@@ -60,3 +60,16 @@ response :
 aid : Device ID  
 fever : temperature that recorded  
 ```
+```
+올바른 응답일 경우  
+{
+  "fieldCount":0,
+  "affectedRows":1,
+  "insertId":2,
+  "serverStatus":2,
+  "warningCount":0,
+  "message":"",
+  "protocol41":true,
+  "changedRows":0
+}
+```
