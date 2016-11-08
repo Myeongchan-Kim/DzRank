@@ -44,7 +44,7 @@ show reginmal disease forcast in Korea
 ## POST
 ```
 /test_temp
-```
 x-www-form-urlencoded  
 aid : Device ID  
 fever : temperature that recorded  
+```
