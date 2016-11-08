@@ -55,7 +55,7 @@ response : 내림차순 정렬되어 있습니다.
   
   
 # 웨어러블 테스트용
-## POST
+## POST x-www-form-urlencoded
 ```
 /test_temp
 aid : Device ID  
