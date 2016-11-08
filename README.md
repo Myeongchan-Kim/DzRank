@@ -6,26 +6,24 @@ show reginmal disease forcast in Korea
 ```
 /show/total
 ```
-- 14 days total table until NOW  
-  
+- 현재까지 14일 동안의 전국 순위 테이블을 보내줍니다. 
   
 ```
 /show/total/{end_date}
 ```
-- 14 days total table until end_date  
+- end_date 까지 14일 동안의 전국 순위 테이블을 보내줍니다. 
   
 
 ```
 /show/total/{start_date}/{end_date}
 ```
-- total table of from start_date until end_date
+- start_date 부터 end_date 까지의 전국 테이블을 보내줍니다. 
   
   
 ```
 /regional/{region_num}
 ```
-- 14 days regional table until NOW
-- target region is {region_num}
+- region_num 지역의 14일 동안의 테이블을 보여줍니다. 
   
   
 ```
@@ -44,7 +42,6 @@ show reginmal disease forcast in Korea
 ## POST
 ```
 /test_temp
-x-www-form-urlencoded  
 aid : Device ID  
 fever : temperature that recorded  
 ```
