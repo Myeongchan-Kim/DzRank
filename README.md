@@ -3,9 +3,7 @@ show reginmal disease forcast in Korea
 
 # API
 ## GET
-'''
-/show/total
-'''
+```/show/total```
 - 14 days total table until NOW  
   
 '''/show/total/{end_date}'''
