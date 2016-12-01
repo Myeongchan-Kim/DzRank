@@ -24,13 +24,13 @@ response : 내림차순 정렬되어 있습니다.
 
   
 ```
-/show/total/{end_date}
+/show/total/{end_date:YYYY-MM-DD}
 ```
 - end_date 까지 14일 동안의 전국 순위 테이블을 보내줍니다. 
 - 반환형식은 위와 같습니다.  
 
 ```
-/show/total/{start_date}/{end_date}
+/show/total/{start_date:YYYY-MM-DD}/{end_date:YYYY-MM-DD}
 ```
 - start_date 부터 end_date 까지의 전국 테이블을 보내줍니다. 
 - 반환형식은 위와 같습니다.  
@@ -42,13 +42,13 @@ response : 내림차순 정렬되어 있습니다.
 - 반환형식은 위와 같습니다.  
   
 ```
-/regional/{region_num}/{end_date}
+/regional/{region_num}/{end_date:YYYY-MM-DD}
 ```
 - 이하동문
   
   
 ```
-/regional/{region_num}/{start_date}/{end_date}
+/regional/{region_num}/{start_date:YYYY-MM-DD}/{end_date:YYYY-MM-DD}
 ```
 - 이하동문
   
