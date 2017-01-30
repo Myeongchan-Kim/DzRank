@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Show Influenza</title>
+	<script src="d3.min.js"></script>
+	<script src="date.js"></script>
+	<style>
+	div.top_menu{
+		position:fixed;
+	}
+	</style>
+</head>
+<body>
+<div class="top_menu">
+	<input id="interval" value="200" />
+	<input type="date" id="start_date" value="" />
+	<input type="Number" id="r_const" value="17" min="1" max="20"/>
+<button id="apply" onclick="applySetting();">Apply</button>
+<button id="start" onclick="run();">START</button>
+</div>
+</body>
+	<script>
+Date.prototype.yyyymmdd = function() {
+  var mm = this.getMonth() + 1; // getMonth() is zero-based
+  var dd = this.getDate();
+
+  return [this.getFullYear(),
+          (mm>9 ? '' : '0') + mm,
+          (dd>9 ? '' : '0') + dd
+         ].join('-');
+};
+
+var data = [];
+
+// window size
+var width = 800,
+    height = 600;
+
+var nodes = [];
+// load data;
+
+var load_data = function(file_name){
+    var rawFile = new XMLHttpRequest();
+    rawFile.open("GET", file_name, true);
+    rawFile.onreadystatechange = function ()
+    {
+        if(rawFile.readyState === 4)
+        {
+            if(rawFile.status === 200 || rawFile.status == 0)
+            {
+                parsingRecievedData(rawFile);
+
+				makeNodeFromData(); // pre process of data
+	
+				var svg = makeSvg();
+				var imgs = makeMapImg();
+				var dateText = makeDateText(svg);
+				
+				var circles = makeCircle(svg);
+
+                set_input_text();
+
+            }
+        }
+    }
+    rawFile.send(null);
+}
+function set_input_text(){
+	var start_date = document.getElementById("start_date");
+	start_date.value = data[0].date;
+}
+
+function makeDateText(svg){
+
+	var text = svg.append("text")
+		.attr("x", 30)
+		.attr("y", 50)
+		.text(data[0].date)
+		.attr("font-family", "sans-serif")
+		.attr("font-size", "20px")
+		.attr("fill", "black");
+
+	return text;
+}
+
+function makeCircle(svg){
+	circles = svg.selectAll("circle")
+	    .data(nodes)
+		.enter().append("circle");
+	
+	circles = circles.filter(function(d){
+		return !d.isLegend;
+	});
+
+	var max_size = Number(document.getElementById("r_const").value);
+	var r = Math.sqrt(1800) * max_size / 100;
+
+	return circles;
+}
+
+function parsingRecievedData(rawFile){
+	var allText = rawFile.responseText;
+    var result = allText.split(/\r?\n/);
+    var returnArray = [];
+    var titles = [];
+    for ( i in result){
+    	var row = result[i];
+    	row = row.replace(/['"]+/g, '');
+		//console.log(row);
+    	
+    	var arr = row.split(",");
+    	//console.log(arr);
+    	
+    	// title data
+    	if(i == 0)
+    	{
+    		titles = arr;
+    		continue;
+    	}
+    	
+    	var obj = {};
+    	for(i in titles)
+    	{
+    		obj[titles[i]] = arr[i];
+    	}
+    	obj.isLegend = false;
+
+    	//console.log(obj);
+    	returnArray.push(obj);
+    }
+
+    returnArray.pop(); //last empty array delete;
+    
+    console.log("result length : " + Object.keys(obj).length);
+    
+    data = returnArray;
+}
+
+function makeNodeFromData(){
+	// control feature
+
+	console.log("input data: " + data.length);
+	
+	for( i in data){
+		dz = data[i];	
+		dz.y = (-Number(dz['latitude']) + 39) * 100;
+		dz.x = (Number(dz['longitude']) - 125) * 100;
+
+		if(isNaN(dz.y) || isNaN(dz.x))
+			continue;
+		
+		dz.numDate = Date.parse(dz.date);
+		if(!!dz.numDate)
+			dz.numDate = dz.numDate.getTime() / 1000 / 3600 / 24;
+
+		dz['radius'] = 0;
+		dz['dzNum'] = Number(dz['dzNum']);
+
+		dz.running = false;
+		
+		nodes.push(dz);
+	}
+
+	// for( var  i = 0; i < 5 ; i++){
+	// 	console.log(nodes[i]);
+	// }
+}
+
+function init_circle(circles){
+	
+	var max_size = Number(document.getElementById("r_const").value);
+		
+	circles 
+	  	.attr("r", function(d) { 
+	  		d.running = false;
+	  		d.max_radius = Math.sqrt(d.born_to_day) * max_size / 100;
+	  		return d.radius; 
+	  	})
+	    .attr("cx", function(d) { return d.x; })
+	    .attr("cy", function(d){ return d.y; })
+	    .attr("opacity", function(d){
+	    	if( d.dzNum == 7 ) return "0.3";
+	    	else return "0.2";
+	    })
+	    .style("fill", function(d, i) { 
+	    	if( d.dzNum == 7 ) return 'red';
+	    	else return 'green'; })
+	    ;
+
+}
+
+function makeSvg(){
+	var svg = d3.select("body").append("svg")
+	    .attr("width", width)
+	    .attr("height", height);
+	
+	return svg;
+}
+
+function makeMapImg(){
+	var svg = d3.select("svg");
+
+	var imgs = svg.selectAll("image").data([0]);
+
+    imgs.enter()
+	    .append("svg:image")
+	    .attr("preserveAspectRatio" , "none")
+	    .attr("xlink:href", "./map.png")
+	    .attr("x", "10")
+	    .attr("y", "20")
+	    .attr("fill-opacity","0.2")
+	    .attr("width", "612")
+	    .attr("height", "607");
+
+	return imgs;
+}
+
+function run(){
+	var svg = d3.select("svg");
+	var circles = svg.selectAll("circle").filter(function(d) {
+		return !d.isLegend;
+	});
+	var text = svg.selectAll("text");
+
+	var time = 0;
+	var interval = Number(document.getElementById("interval").value);
+	var start_date_input = document.getElementById("start_date").value;
+	var startDate = Date.parse(start_date_input).getTime() / 1000 / 3600 / 24;
+	var endDate = Date.parse("2017-01-15").getTime() / 1000 / 3600 / 24;
+	var curDate = startDate
+
+	var e = setInterval(function(){
+		time += interval; 
+		console.log(time, "date:" + curDate);
+		curDate++;
+
+		apply(curDate, circles, text ,interval);
+		if(curDate > endDate){
+			stopTransition(circles);
+			clearInterval(e);
+			
+			time = 0;
+			curDate = startDate;
+
+			init_circle(circles);
+		}
+	}, interval);
+}
+
+function applySetting(){
+	var svg = d3.select("svg");
+	var circles = svg.selectAll("circle").filter(function(d){return !d.isLegend;});
+	init_circle(circles);
+}
+
+function stopTransition(circles){
+	console.log("Stop transition")
+	circles.attr("r", 0);
+}
+
+function apply(currentTime, circles, text, interval){
+	var today = new Date(currentTime * 1000 * 3600 *24);
+	//var todayStr = "" + today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
+	var todayStr = today.yyyymmdd();
+	text.text(todayStr);
+
+	circles 
+		.filter(function (d){
+			return d.running == false 
+			&& d.numDate < currentTime
+			&& d.numDate > currentTime - 2.0;
+		})
+	  	.transition('grow')
+	  		.duration(interval * 5)
+	  		.attr("r", function(d) { 
+	  			console.log("d:", d.date, " num:", d.numDate, " curTime:",currentTime);
+	  			d.running = true;
+	  			return d.max_radius; 
+	  		})
+	  	.transition('reduce')
+	  		.duration(interval * 6)
+	  		.attr("r", 0)
+	    ;
+
+}
+
+load_data('./ford3_v4.csv');
+
+	</script>
+</html>
