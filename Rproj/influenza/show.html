@@ -14,8 +14,9 @@
 <div class="top_menu">
 	<input id="interval" value="200" />
 	<input type="date" id="start_date" value="" />
-	<input type="Number" id="r_const" value="17" min="1" max="20"/>
-<button id="apply" onclick="applySetting();">Apply</button>
+	<span>min_size</span><input type="Number" id="min_size" value="4" min="1" max="20"/>
+	<span>max_size</span><input type="Number" id="max_size" value="8" min="1" max="20"/>
+	<button id="apply" onclick="applySetting();">Apply</button>
 <button id="start" onclick="run();">START</button>
 </div>
 </body>
@@ -39,6 +40,15 @@ var width = 800,
 var nodes = [];
 // load data;
 
+var incubate_day = 5;
+var symptom_day = 6;
+
+var r_max_bornToDay = Math.sqrt(365 * 12);
+var r_min_bornToDay = Math.sqrt(10);
+
+var repeat_flag = false;
+
+
 var load_data = function(file_name){
     var rawFile = new XMLHttpRequest();
     rawFile.open("GET", file_name, true);
@@ -57,6 +67,8 @@ var load_data = function(file_name){
 				var dateText = makeDateText(svg);
 				
 				var circles = makeCircle(svg);
+				var legend_circle = makeLegends(svg);
+				init_legends(legend_circle);
 
                 set_input_text();
 
@@ -65,6 +77,7 @@ var load_data = function(file_name){
     }
     rawFile.send(null);
 }
+
 function set_input_text(){
 	var start_date = document.getElementById("start_date");
 	start_date.value = data[0].date;
@@ -84,18 +97,68 @@ function makeDateText(svg){
 }
 
 function makeCircle(svg){
-	circles = svg.selectAll("circle")
+	var circles = svg.selectAll("circle")
 	    .data(nodes)
-		.enter().append("circle");
+		.enter().append("circle")
+		.attr("class", "patient");
 	
 	circles = circles.filter(function(d){
 		return !d.isLegend;
 	});
 
-	var max_size = Number(document.getElementById("r_const").value);
-	var r = Math.sqrt(1800) * max_size / 100;
-
 	return circles;
+}
+
+function makeLegends(svg){
+	var offsetX = 520;
+	var offsetY = 30;
+	var intervalY = 22;
+	var max_size = Number(document.getElementById("max_size").value);
+	var min_size = Number(document.getElementById("min_size").value);
+
+	var legends_data = [
+		{
+			name : "red",
+			description : "독감 진단",
+			radius : max_size,
+			x : offsetX,
+			y : offsetY,
+			color : 'red',
+		},{
+			name : "green",
+			description : "일반 질환",
+			radius : max_size,
+			x : offsetX,
+			y : offsetY + intervalY,
+			color : 'red',
+		},{
+			name : "ten",
+			description : "10세 소아",
+			radius : max_size,
+			x : offsetX,
+			y : offsetY + intervalY * 2,
+			color : 'red',
+		},{
+			name : "one",
+			description : "1세 소아",
+			radius : min_size,
+			x : offsetX,
+			y : offsetY + intervalY * 3,
+			color : 'red',
+		},
+	];
+
+	var legend_circle = svg.selectAll("circle.legend")
+		.data(legends_data).enter().append("circle")
+		.attr("class", "legend");
+
+	var legend_text = svg.selectAll("text.legend")
+		.data(legends_data).enter().append("text")
+		.text(function(d){return d.description;})
+		.attr("x", function(d){return d.x + 7;})
+		.attr("y", function(d){return d.y + 5;});
+
+	return legend_circle;
 }
 
 function parsingRecievedData(rawFile){
@@ -149,9 +212,10 @@ function makeNodeFromData(){
 		if(isNaN(dz.y) || isNaN(dz.x))
 			continue;
 		
+		//convert Diagnosis date -> disease date
 		dz.numDate = Date.parse(dz.date);
 		if(!!dz.numDate)
-			dz.numDate = dz.numDate.getTime() / 1000 / 3600 / 24;
+			dz.numDate = (dz.numDate.getTime() / 1000 / 3600 / 24) - incubate_day;
 
 		dz['radius'] = 0;
 		dz['dzNum'] = Number(dz['dzNum']);
@@ -160,33 +224,9 @@ function makeNodeFromData(){
 		
 		nodes.push(dz);
 	}
-
 	// for( var  i = 0; i < 5 ; i++){
 	// 	console.log(nodes[i]);
 	// }
-}
-
-function init_circle(circles){
-	
-	var max_size = Number(document.getElementById("r_const").value);
-		
-	circles 
-	  	.attr("r", function(d) { 
-	  		d.running = false;
-	  		d.max_radius = Math.sqrt(d.born_to_day) * max_size / 100;
-	  		return d.radius; 
-	  	})
-	    .attr("cx", function(d) { return d.x; })
-	    .attr("cy", function(d){ return d.y; })
-	    .attr("opacity", function(d){
-	    	if( d.dzNum == 7 ) return "0.3";
-	    	else return "0.2";
-	    })
-	    .style("fill", function(d, i) { 
-	    	if( d.dzNum == 7 ) return 'red';
-	    	else return 'green'; })
-	    ;
-
 }
 
 function makeSvg(){
@@ -217,7 +257,7 @@ function makeMapImg(){
 
 function run(){
 	var svg = d3.select("svg");
-	var circles = svg.selectAll("circle").filter(function(d) {
+	var circles = svg.selectAll(".patient").filter(function(d) {
 		return !d.isLegend;
 	});
 	var text = svg.selectAll("text");
@@ -226,7 +266,7 @@ function run(){
 	var interval = Number(document.getElementById("interval").value);
 	var start_date_input = document.getElementById("start_date").value;
 	var startDate = Date.parse(start_date_input).getTime() / 1000 / 3600 / 24;
-	var endDate = Date.parse("2017-01-15").getTime() / 1000 / 3600 / 24;
+	var endDate = Date.parse("2017-01-30").getTime() / 1000 / 3600 / 24;
 	var curDate = startDate
 
 	var e = setInterval(function(){
@@ -247,10 +287,110 @@ function run(){
 	}, interval);
 }
 
+function init_circle(circles){
+	var max_size = Number(document.getElementById("max_size").value);
+	var min_size = Number(document.getElementById("min_size").value);
+
+	circles 
+	  	.attr("r", function(d) { 
+	  		d.running = false;
+	  		d.max_radius = min_size + ( max_size - min_size ) 
+	  		* ( Math.sqrt(d.born_to_day) - r_min_bornToDay ) / (r_max_bornToDay - r_min_bornToDay);
+	  		return d.radius; 
+	  	})
+	    .attr("cx", function(d) { return d.x; })
+	    .attr("cy", function(d){ return d.y; })
+	    .attr("opacity", function(d){
+	    	if( d.dzNum == 7 ) return "0.3";
+	    	else return "0.2";
+	    })
+	    .style("fill", function(d, i) { 
+	    	if( d.dzNum == 7 ) return 'red';
+	    	else return 'green'; })
+	    ;
+	return circles;
+}
+
+function init_legends(legend_circle){
+	var max_size = Number(document.getElementById("max_size").value);
+	var min_size = Number(document.getElementById("min_size").value);
+	var interval = Number(document.getElementById("interval").value);
+	
+	legend_circle
+		.attr("r", function(d){ 
+			if(d.name == "one")
+				d.radius = min_size;
+			else 
+				d.radius = max_size;
+
+			return 2;
+		})
+		.attr("cx", function(d){ return d.x;})
+		.attr("cy", function(d){ return d.y;})
+		.style("fill", function(d){ 
+			if ( d.name == 'green') return 'green';
+			else return 'red';
+		})
+		.attr("opacity", function(d){ 
+			if ( d.name == 'green') return 0.2;
+			else return 0.3;
+		});
+
+	if(repeat_flag == false)
+		repeat_trans();
+
+	function repeat_trans(){
+		legend_circle
+			.transition("legend_grow")
+		  		.duration(interval * incubate_day)
+		  		.attr("r", function(d) { 
+		  			return d.radius; 
+		  		})
+	  		.transition("legend_small")
+		  		.duration(interval * symptom_day)
+		  		.attr("r", 0);
+
+	  	//console.log("repeat");
+	  	repeat_flag = true;
+	  	setTimeout(repeat_trans, interval * (incubate_day + symptom_day));
+	 };
+	
+	
+	return legend_circle;
+}
+
 function applySetting(){
 	var svg = d3.select("svg");
-	var circles = svg.selectAll("circle").filter(function(d){return !d.isLegend;});
+	
+	var circles = svg.selectAll(".patient").filter(function(d){return !d.isLegend;});
+	var legend_circle = svg.selectAll("circle.legend");
+	
 	init_circle(circles);
+	init_legends(legend_circle);
+}
+
+function apply(currentTime, circles, date_text, interval){
+	var today = new Date((currentTime) * 1000 * 3600 * 24);
+	var todayStr = today.yyyymmdd();
+	date_text.text(todayStr);
+
+	circles 
+		.filter(function (d){
+			return d.running == false 
+			&& d.numDate < currentTime
+			&& d.numDate >= currentTime - 1.0;
+		})
+	  	.transition('grow')
+	  		.duration(interval * incubate_day)
+	  		.attr("r", function(d) { 
+	  			console.log("d:", d.date, " num:", d.numDate, " curTime:",currentTime);
+	  			d.running = true;
+	  			return d.max_radius; 
+	  		})
+	  	.transition('reduce')
+	  		.duration(interval * symptom_day)
+	  		.attr("r", 0)
+	    ;
 }
 
 function stopTransition(circles){
@@ -258,33 +398,7 @@ function stopTransition(circles){
 	circles.attr("r", 0);
 }
 
-function apply(currentTime, circles, text, interval){
-	var today = new Date(currentTime * 1000 * 3600 *24);
-	//var todayStr = "" + today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
-	var todayStr = today.yyyymmdd();
-	text.text(todayStr);
-
-	circles 
-		.filter(function (d){
-			return d.running == false 
-			&& d.numDate < currentTime
-			&& d.numDate > currentTime - 2.0;
-		})
-	  	.transition('grow')
-	  		.duration(interval * 5)
-	  		.attr("r", function(d) { 
-	  			console.log("d:", d.date, " num:", d.numDate, " curTime:",currentTime);
-	  			d.running = true;
-	  			return d.max_radius; 
-	  		})
-	  	.transition('reduce')
-	  		.duration(interval * 6)
-	  		.attr("r", 0)
-	    ;
-
-}
-
-load_data('./ford3_v4.csv');
+load_data('./ford3_v5.csv');
 
 	</script>
 </html>
